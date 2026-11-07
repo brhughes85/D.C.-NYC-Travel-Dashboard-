@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>DC + NYC Trip Board</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚆</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Semi+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#E6ECF1; --surface:#FFFFFF; --surface-2:#F2F5F8; --ink:#102A43; --muted:#52667A;
+  --line:#C9D4DE; --navy:#173A5E; --on-navy:#FFFFFF;
+  --red:#C81E3A; --amber:#B86E00; --amber-bg:#FFF1D6; --green:#1F7A56; --green-bg:#DDF2E8;
+  --focus:#2B6CB0;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D1823; --surface:#152535; --surface-2:#1B2E42; --ink:#E6EEF5; --muted:#9AAFC2;
+    --line:#2A4058; --navy:#22517F; --on-navy:#FFFFFF;
+    --red:#FF5C72; --amber:#FFB547; --amber-bg:#3A2C10; --green:#4FD3A0; --green-bg:#123528;
+    --focus:#7FB3F0; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D1823; --surface:#152535; --surface-2:#1B2E42; --ink:#E6EEF5; --muted:#9AAFC2;
+  --line:#2A4058; --navy:#22517F; --on-navy:#FFFFFF;
+  --red:#FF5C72; --amber:#FFB547; --amber-bg:#3A2C10; --green:#4FD3A0; --green-bg:#123528;
+  --focus:#7FB3F0; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Barlow",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:1rem;line-height:1.45;-webkit-text-size-adjust:100%}
+.cond{font-family:"Barlow Semi Condensed","Arial Narrow",system-ui,sans-serif}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:6px}
+.wrap{max-width:1180px;margin:0 auto;padding:1rem 1rem 3rem}
+
+/* Top bar */
+.top{display:flex;justify-content:space-between;align-items:baseline;gap:1rem;padding:.25rem 0 .9rem}
+.top h1{margin:0;font-size:1.05rem;font-weight:600;color:var(--muted);letter-spacing:.01em}
+.clock{text-align:right;font-variant-numeric:tabular-nums}
+.clock .t{font-size:1.9rem;font-weight:700;line-height:1}
+.clock .d{font-size:.85rem;color:var(--muted)}
+
+/* Departure board hero */
+.board{background:var(--navy);color:var(--on-navy);border-radius:18px;padding:1.1rem 1.15rem 1.15rem;position:relative;overflow:hidden}
+.board .state{display:inline-block;font-size:.8rem;font-weight:600;padding:.15rem .55rem;border-radius:999px;background:rgba(255,255,255,.14)}
+.board.soon .state{background:var(--amber);color:#1B1300}
+.board.now .state{background:#FF4D66;color:#fff}
+.board .big{font-size:clamp(2.4rem,9vw,4rem);font-weight:700;line-height:1;margin:.5rem 0 .35rem;font-variant-numeric:tabular-nums}
+.board .what{font-size:1.25rem;font-weight:600;margin:0}
+.board .sub{margin:.2rem 0 0;opacity:.85}
+.board .actions{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1rem}
+.board .btn{background:#fff;color:#102A43;border-color:#fff}
+.board .btn.ghost{background:transparent;color:#fff;border-color:rgba(255,255,255,.5)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:.45rem .9rem;border-radius:10px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font:600 .95rem/1.1 "Barlow",system-ui,sans-serif;text-decoration:none;cursor:pointer}
+.btn.small{min-height:38px;padding:.35rem .7rem;font-size:.88rem}
+
+/* Layout */
+.grid{display:grid;gap:1rem;margin-top:1rem}
+@media (min-width:900px){.grid{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);align-items:start}}
+
+/* Day tabs */
+.days{display:flex;gap:.4rem;overflow-x:auto;padding-bottom:.25rem;scrollbar-width:none}
+.days::-webkit-scrollbar{display:none}
+.day{flex:0 0 auto;min-width:64px;min-height:56px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;padding:.35rem .6rem;text-align:center;cursor:pointer;font-family:inherit}
+.day .dw{display:block;font-size:.8rem;color:var(--muted)}
+.day .dn{display:block;font-size:1.25rem;font-weight:700;line-height:1.1}
+.day[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#fff}
+.day[aria-pressed="true"] .dw{color:rgba(255,255,255,.8)}
+.day .today{display:block;font-size:.7rem;font-weight:600;color:var(--green)}
+.day[aria-pressed="true"] .today{color:#9FF0CB}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:1rem}
+.dayhead{margin:.9rem 0 .2rem}
+.dayhead h2{margin:0;font-size:1.5rem;font-weight:700}
+.dayhead p{margin:.1rem 0 0;color:var(--muted)}
+
+/* Timeline */
+.stops{list-style:none;margin:.75rem 0 0;padding:0}
+.stop{position:relative;padding:0 0 0 2.2rem}
+.stop::before{content:"";position:absolute;left:.72rem;top:1.5rem;bottom:0;width:2px;background:var(--line)}
+.stop:last-child::before{display:none}
+.dot{position:absolute;left:0;top:.6rem;width:1.5rem;height:1.5rem;border-radius:50%;border:2px solid var(--navy);background:var(--surface);display:grid;place-items:center;font-size:.72rem;font-weight:700;color:var(--navy);cursor:pointer;padding:0;font-family:inherit}
+.stop.done .dot{background:var(--green);border-color:var(--green);color:#fff}
+.stop.done .card{opacity:.55}
+.card{padding:.5rem 0 .2rem}
+.row1{display:flex;flex-wrap:wrap;align-items:baseline;gap:.35rem .6rem}
+.name{font-size:1.08rem;font-weight:600;margin:0}
+.chip{font-size:.8rem;font-weight:600;padding:.1rem .5rem;border-radius:999px;background:var(--surface-2);color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+.chip.leave{background:var(--amber-bg);color:var(--amber)}
+.chip.opt{background:transparent;border:1px dashed var(--line);color:var(--muted)}
+.note{margin:.15rem 0 0;color:var(--muted);font-size:.95rem}
+.links{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.45rem}
+.leg{margin:.4rem 0 .5rem;font-size:.85rem;color:var(--muted)}
+
+/* Side sections */
+.side h3{margin:0 0 .5rem;font-size:1.2rem;font-weight:700}
+.side .panel+.panel{margin-top:1rem}
+.train{padding:.6rem 0;border-top:1px solid var(--line)}
+.train:first-of-type{border-top:0;padding-top:0}
+.train .tn{font-weight:600}
+.train .tt{font-variant-numeric:tabular-nums;color:var(--muted);font-size:.95rem}
+.wx{display:grid;gap:.6rem}
+.wx .place{display:flex;justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap}
+.tip{margin:.7rem 0 0;font-size:.92rem;color:var(--muted)}
+.linklist{display:flex;flex-wrap:wrap;gap:.4rem}
+.foot{margin-top:1.5rem;font-size:.82rem;color:var(--muted)}
+.foot button{background:none;border:0;color:inherit;text-decoration:underline;font:inherit;cursor:pointer;padding:0}
+@media (prefers-reduced-motion:no-preference){.dot{transition:background .2s}}
+.look{margin:.35rem 0 0;padding:.45rem .6rem;border-left:3px solid var(--amber);background:var(--surface-2);border-radius:0 8px 8px 0;font-size:.93rem}
+.look b{font-weight:600}
+.status{font-size:.92rem;margin:.35rem 0 0;font-variant-numeric:tabular-nums}
+.status.ok{color:var(--green)}
+.status.late{color:var(--red)}
+.status.wait{color:var(--muted)}
+.seg{display:inline-flex;border:1.5px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:.6rem}
+.seg button{border:0;background:var(--surface);color:var(--ink);font:600 .88rem/1 "Barlow",system-ui,sans-serif;padding:.55rem .8rem;min-height:40px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--navy);color:#fff}
+.wxnow{display:flex;align-items:baseline;gap:.6rem;flex-wrap:wrap}
+.wxnow .temp{font-size:2.6rem;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.wxnow .cond-txt{color:var(--muted)}
+.drop{margin:.6rem 0 0;padding:.5rem .65rem;border-radius:10px;font-weight:600;font-size:.95rem}
+.drop.warn{background:var(--amber-bg);color:var(--amber)}
+.drop.calm{background:var(--green-bg);color:var(--green)}
+.hours{display:flex;gap:.35rem;overflow-x:auto;margin-top:.7rem;padding-bottom:.2rem}
+.hour{flex:0 0 auto;min-width:58px;text-align:center;background:var(--surface-2);border-radius:10px;padding:.35rem .3rem;font-variant-numeric:tabular-nums}
+.hour .h{font-size:.78rem;color:var(--muted)}
+.hour .v{font-size:1.1rem;font-weight:700}
+.outlook{margin:.7rem 0 0;padding:0;list-style:none;font-size:.92rem}
+.outlook li{display:flex;justify-content:space-between;gap:.5rem;padding:.3rem 0;border-top:1px solid var(--line)}
+.outlook li:first-child{border-top:0}
+.alerts{list-style:none;margin:.3rem 0 0;padding:0}
+.alerts li{display:flex;gap:.55rem;align-items:flex-start;padding:.45rem 0;border-top:1px solid var(--line);font-size:.92rem}
+.alerts li:first-child{border-top:0}
+.bullets{display:flex;gap:.2rem;flex-wrap:wrap;flex:0 0 auto;max-width:5.2rem}
+.bullet{width:1.45rem;height:1.45rem;border-radius:50%;display:grid;place-items:center;font:700 .8rem/1 "Helvetica Neue",Arial,sans-serif;color:#fff}
+.atype{display:block;font-weight:600}
+.muted{color:var(--muted)}
+.addr{background:none;border:0;padding:0;color:var(--muted);text-decoration:underline;font:inherit;font-size:.85rem;cursor:pointer;margin-left:.3rem}
+.wake{margin-left:.6rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>DC + NYC, Nov 24–29</h1>
+    <div class="clock cond"><div class="t" id="clockT">--:--</div><div class="d" id="clockD"></div></div>
+  </header>
+
+  <section class="board cond" id="board" aria-live="polite">
+    <span class="state" id="bState">Up next</span>
+    <div class="big" id="bBig">—</div>
+    <p class="what" id="bWhat"></p>
+    <p class="sub" id="bSub"></p>
+    <div class="actions" id="bActions"></div>
+  </section>
+
+  <div class="grid">
+    <main>
+      <nav class="days cond" id="days" aria-label="Trip days"></nav>
+      <div class="panel" style="margin-top:.75rem">
+        <div class="dayhead cond" style="margin-top:0"><h2 id="dayTitle"></h2><p id="dayNote"></p></div>
+        <ol class="stops" id="stops"></ol>
+      </div>
+    </main>
+
+    <aside class="side">
+      <div class="panel">
+        <h3 class="cond">Weather</h3>
+        <div class="seg" role="group" aria-label="Weather location">
+          <button type="button" data-loc="nyc">New York</button>
+          <button type="button" data-loc="dc">Rockville + DC</button>
+        </div>
+        <div id="wx"><p class="muted">Loading the forecast…</p></div>
+      </div>
+
+      <div class="panel">
+        <h3 class="cond">Trains</h3>
+        <div class="train">
+          <div class="tn">Northeast Regional 66, Washington to New York</div>
+          <div class="tt">Thu 10:00 PM from Union Station, arrives Fri 5:11 AM.</div>
+          <p class="status wait" id="st66">Live status shows up on travel day.</p>
+          <div class="links" style="margin-top:.45rem">
+            <a class="btn small" href="https://www.amtrak.com/track-your-train.html" target="_blank" rel="noopener">Amtrak status</a>
+          </div>
+        </div>
+        <div class="train">
+          <div class="tn">Northeast Regional 65, New York to Washington</div>
+          <div class="tt">Sat 11:23 PM from Moynihan Train Hall, arrives Sun 6:29 AM.</div>
+          <p class="status wait" id="st65">Live status shows up on travel day.</p>
+          <div class="links" style="margin-top:.45rem">
+            <a class="btn small" href="https://www.amtrak.com/track-your-train.html" target="_blank" rel="noopener">Amtrak status</a>
+          </div>
+        </div>
+        <p class="tip">Tickets and boarding passes live in the Amtrak app.</p>
+      </div>
+
+      <div class="panel">
+        <h3 class="cond">Subway</h3>
+        <div id="subway"><p class="muted">Loading NYC subway alerts…</p></div>
+        <div class="links" style="margin-top:.6rem">
+          <a class="btn small" href="https://www.mta.info/" target="_blank" rel="noopener">MTA service status</a>
+          <a class="btn small" href="https://www.wmata.com/" target="_blank" rel="noopener">DC Metro alerts</a>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <p class="foot">All times are Eastern. Tap a stop’s circle to mark it done.
+    <button type="button" id="resetDone">Clear done marks</button>
+    <button type="button" id="wakeBtn" class="wake" hidden>Keep screen on</button>
+  </p>
+</div>
+<script>
+(function(){
+  var TZ = "America/New_York", E = "-05:00";
+  function t(day, hm){ return new Date("2026-11-" + day + "T" + hm + ":00" + E); }
+
+  // Private places: addresses are saved only on this device, never in this file.
+  var PRIVATE = { family:"Family’s house", home:"Home" };
+
+  var DAYS = [
+    { key:"2026-11-24", dw:"Tue", dn:"24", title:"Arrive in Rockville", note:"Check in, then dinner with family.", stops:[
+      { name:"Hilton Washington DC/Rockville", q:"Hilton Washington DC/Rockville Hotel & Executive Meeting Center", mode:"driving", at:t("24","16:00"), atLabel:"Check-in 4 PM", leg:"5 min drive" },
+      { name:PRIVATE.family, priv:"family", mode:"driving", note:"Dinner with family." }
+    ]},
+    { key:"2026-11-25", dw:"Wed", dn:"25", title:"Museums on the Mall", note:"Family joins today.", stops:[
+      { name:"Hilton Rockville", q:"Hilton Washington DC/Rockville Hotel & Executive Meeting Center", mode:"walking", leg:"3 min walk" },
+      { name:"Twinbrook Metro", q:"Twinbrook Metro Station", mode:"walking", leg:"About 37 min by Metro, change at Metro Center" },
+      { name:"Smithsonian Metro", q:"Smithsonian Metro Station", mode:"transit", leg:"8 min walk",
+        look:"Take the Mall exit. At the top of the escalator, the Washington Monument is on one side and the Capitol on the other." },
+      { name:"U.S. Holocaust Memorial Museum", q:"United States Holocaust Memorial Museum", mode:"transit", at:t("25","10:00"), atLabel:"10:00 AM", leave:t("25","09:00"), leaveFrom:"the hotel", note:"Opens at 10 AM. Get tickets before you go.", leg:"14 min walk",
+        look:"The main exhibit starts on the 4th floor and works down, and it’s recommended for ages 11 and up. Pick up an ID card at the start to follow one real person’s story. Daniel’s Story on the first floor is made for younger visitors." },
+      { name:"Lunch at the Ronald Reagan Building", q:"Ronald Reagan Building and International Trade Center", mode:"walking", leg:"9 min walk",
+        look:"The food court is on the lower level. Look for the section of the Berlin Wall displayed at the building." },
+      { name:"National Museum of American History", q:"Smithsonian National Museum of American History", mode:"walking", leg:"6 min walk",
+        look:"Don’t miss the original Star-Spangled Banner in its dim chamber, Dorothy’s ruby slippers, Julia Child’s kitchen, the First Ladies’ gowns, and the Greensboro lunch counter." },
+      { name:"Federal Triangle Metro", q:"Federal Triangle Metro Station", mode:"walking", leg:"About 34 min by Metro" },
+      { name:"Twinbrook Metro", q:"Twinbrook Metro Station", mode:"transit", leg:"3 min walk" },
+      { name:"Hilton Rockville", q:"Hilton Washington DC/Rockville Hotel & Executive Meeting Center", mode:"walking" }
+    ]},
+    { key:"2026-11-26", dw:"Thu", dn:"26", title:"Thanksgiving, then the night train", note:"Check out of the Hilton and bring bags along.", stops:[
+      { name:"Hilton Rockville", q:"Hilton Washington DC/Rockville Hotel & Executive Meeting Center", mode:"walking", note:"Check out today.", leg:"3 min walk" },
+      { name:"Twinbrook Metro", q:"Twinbrook Metro Station", mode:"walking", leg:"27 min" },
+      { name:PRIVATE.family, priv:"family", mode:"walking", note:"Thanksgiving with family.", leg:"4 min drive" },
+      { name:"Rockville Metro", q:"Rockville Metro Station", mode:"driving", note:"Metro runs a holiday schedule today, so trains may come less often.", leg:"About 37 min by Metro to Union Station" },
+      { name:"Train 66 from Union Station", q:"Washington Union Station", mode:"transit", train:"66", at:t("26","22:00"), atLabel:"Departs 10:00 PM", leave:t("26","20:35"), leaveFrom:"the family’s house", note:"Aim to be at Union Station by 9:30 PM. Arrives New York 5:11 AM.",
+        look:"Look up in the Main Hall: the coffered ceiling is covered in gold leaf." }
+    ]},
+    { key:"2026-11-27", dw:"Fri", dn:"27", title:"Downtown at sunrise, Midtown by afternoon", note:"Early start straight off the train.", stops:[
+      { name:"Arrive at Moynihan Train Hall", q:"Moynihan Train Hall", mode:"transit", train:"66", at:t("27","05:11"), atLabel:"Arrives 5:11 AM", arrival:true, note:"30–40 min to the hotel by subway or walking.", leg:"30–40 min",
+        look:"The hall is built inside the old Farley Post Office. Look up at the huge glass skylight." },
+      { name:"DoubleTree by Hilton New York Downtown", q:"DoubleTree by Hilton New York Downtown", mode:"transit", note:"Drop bags. Rooms won’t be ready this early.", leg:"1 min walk" },
+      { name:"DJ’s Breakfast Spot", q:"DJ's Breakfast Spot New York", mode:"walking", leg:"2 min walk",
+        look:"Order a bacon, egg and cheese on a roll, the classic New York cart breakfast." },
+      { name:"Stone Street Historic District", q:"Stone Street Historic District", mode:"walking", optional:true, note:"Skip if sunrise is close. It’s on Saturday’s list too.", leg:"11 min walk",
+        look:"One of the first paved streets in New Amsterdam. Notice the cobblestones and the 1800s buildings lining it." },
+      { name:"Pier 15 East River Esplanade", q:"Pier 15 East River Esplanade", mode:"walking", at:t("27","06:30"), atLabel:"6:30 AM", leave:t("27","06:15"), leaveFrom:"breakfast", note:"Sunrise is around 6:45–7:00.", leg:"13 min walk",
+        look:"Head up to the pier’s upper lawn deck. Watch the sun come up over Brooklyn, with the Brooklyn Bridge to your left and the tall ship Wavertree docked next door." },
+      { name:"Alexander Hamilton’s Gravesite", q:"Trinity Church Cemetery Alexander Hamilton Grave Wall Street", mode:"walking", at:t("27","08:30"), atLabel:"8:30 AM", leave:t("27","08:15"), leaveFrom:"Pier 15", leg:"7 min walk",
+        look:"It’s in Trinity’s churchyard, with Eliza Hamilton buried beside him. Fans often leave coins and notes. Angelica Schuyler Church is buried in the churchyard too." },
+      { name:"9/11 Memorial & Museum", q:"9/11 Memorial & Museum", mode:"walking", at:t("27","09:30"), atLabel:"9:30 AM", leave:t("27","09:20"), leaveFrom:"Trinity Church", note:"Tickets for the 9:30 opening. Plan on about 2 hours.", leg:"23 min by subway",
+        look:"The two pools sit in the footprints of the Twin Towers. On each victim’s birthday, a white rose is placed in their name. Find the Survivor Tree near the south pool, and the Last Column and slurry wall inside the museum." },
+      { name:"New York Public Library (Schwarzman Building)", q:"New York Public Library Stephen A. Schwarzman Building", mode:"transit", at:t("27","12:00"), atLabel:"About 12 PM", leave:t("27","11:35"), leaveFrom:"the 9/11 Museum", leg:"4 min walk",
+        look:"Say hi to the lions out front, Patience and Fortitude. Peek into the Rose Main Reading Room on the 3rd floor, and visit the original Winnie-the-Pooh toys in the Children’s Center." },
+      { name:"Kinokuniya New York", q:"Kinokuniya New York", mode:"walking", leg:"3 min walk",
+        look:"Good for manga, art books, and Japanese stationery and pens." },
+      { name:"Bryant Park Winter Village", q:"Bryant Park Winter Village", mode:"walking", atLabel:"About 12:30–2:15", leg:"13 min walk",
+        look:"Skating on the rink is free if you bring skates, with rentals extra. Browse the holiday shops in the glass kiosks around the park." },
+      { name:"Top of the Rock", q:"Top of The Rock", mode:"walking", at:t("27","15:00"), atLabel:"3:00 PM", leave:t("27","14:40"), leaveFrom:"Bryant Park", note:"Aim for 3 PM to catch sunset around 4–4:30.",
+        leg:"3 min walk",
+        look:"Go all the way up to the open-air 70th floor. The Empire State Building is straight south and Central Park is north. The Rockefeller Center tree should be up below, though it usually isn’t lit until the Wednesday after Thanksgiving." },
+      { name:"Nintendo New York", q:"Nintendo NEW YORK", mode:"walking", leg:"3 min walk",
+        look:"Find the display case with the Game Boy damaged in the Gulf War. It still turns on." },
+      { name:"Saks Fifth Avenue", q:"Saks Fifth Avenue New York", mode:"walking", note:"Holiday light show.", leg:"4 min walk",
+        look:"Check out the holiday windows along Fifth Avenue. St. Patrick’s Cathedral is right across the street." },
+      { name:"Radio City Music Hall", q:"Radio City Music Hall", mode:"walking", leg:"7 min walk",
+        look:"An art deco landmark from 1932 and home of the Rockettes’ Christmas Spectacular. The neon marquee is the photo spot." },
+      { name:"Carnegie Deli", q:"Carnegie Deli New York", mode:"walking", note:"The original closed in 2016. Check this one is open before you go.", leg:"28 min by subway" },
+      { name:"DoubleTree Downtown", q:"DoubleTree by Hilton New York Downtown", mode:"transit", leg:"7 min walk" },
+      { name:"SeaGlass Carousel", q:"SeaGlass Carousel", mode:"walking", optional:true, at:t("27","20:00"), atLabel:"Closes 8 PM", leave:t("27","19:35"), leaveFrom:"the hotel", note:"If everyone’s up for it.",
+        look:"You ride inside glowing fish in a spiral glass pavilion in The Battery, with music and light." }
+    ]},
+    { key:"2026-11-28", dw:"Sat", dn:"28", title:"Jellycat, Cursed Child, night train home", note:"Check out this morning and ask the front desk to hold bags.", stops:[
+      { name:"DoubleTree Downtown", q:"DoubleTree by Hilton New York Downtown", mode:"walking", note:"Check out today.", leg:"5 min walk" },
+      { name:"Liberty Bagels Wall Street", q:"Liberty Bagels Wall Street", mode:"walking", at:t("28","07:15"), atLabel:"7:15 AM", leave:t("28","07:05"), leaveFrom:"the hotel", note:"Wanderlog says 7:15 PM. Set as morning here.", leg:"30 min by subway",
+        look:"Known for rainbow bagels and cream-cheese-stuffed bagels." },
+      { name:"FAO Schwarz", q:"FAO Schwarz New York", mode:"transit", at:t("28","09:25"), atLabel:"9:25 AM", leave:t("28","08:50"), leaveFrom:"Liberty Bagels", note:"Jellycat Diner.", leg:"13 min walk",
+        look:"Find the giant floor piano from the movie Big. At the Jellycat Diner, staff “cook” and wrap up plush food like a real order." },
+      { name:"BAPE Store Madison", q:"BAPE STORE MADISON", mode:"walking", leg:"25 min walk" },
+      { name:"Harry Potter and the Cursed Child", q:"Harry Potter and the Cursed Child Lyric Theatre", mode:"walking", at:t("28","13:30"), atLabel:"1:30 PM", leave:t("28","12:55"), leaveFrom:"BAPE", leg:"9 min walk",
+        look:"It’s one show of about 3½ hours with an intermission. Arrive early for security, and keep the secrets." },
+      { name:"Bryant Park Winter Village", q:"Bryant Park Winter Village", mode:"walking", leg:"10 min walk" },
+      { name:"The Drama Book Shop", q:"The Drama Book Shop", mode:"walking", leg:"20 min walk",
+        look:"Co-owned by Lin-Manuel Miranda. Browse the scripts and theater books." },
+      { name:"Saks Fifth Avenue", q:"Saks Fifth Avenue New York", mode:"walking", leg:"34 min by subway" },
+      { name:"Stone Street Historic District", q:"Stone Street Historic District", mode:"transit", leg:"2 min walk",
+        look:"In the evening the restaurants fill the cobblestones with long outdoor tables." },
+      { name:"DoubleTree Downtown", q:"DoubleTree by Hilton New York Downtown", mode:"walking", note:"Pick up bags.", leg:"30–40 min to Moynihan" },
+      { name:"Train 65 from Moynihan Train Hall", q:"Moynihan Train Hall", mode:"transit", train:"65", at:t("28","23:23"), atLabel:"Departs 11:23 PM", leave:t("28","22:10"), leaveFrom:"the hotel", note:"Arrives Washington 6:29 AM." }
+    ]},
+    { key:"2026-11-29", dw:"Sun", dn:"29", title:"Back to Rockville, drive home", note:"Metro opens at 6 AM on Sundays.", stops:[
+      { name:"Arrive at Union Station", q:"Washington Union Station", mode:"transit", train:"65", at:t("29","06:29"), atLabel:"Arrives 6:29 AM", arrival:true, leg:"About 35 min by Metro" },
+      { name:"Rockville Metro", q:"Rockville Metro Station", mode:"transit", leg:"5 min drive" },
+      { name:PRIVATE.family, priv:"family", mode:"driving", leg:"About 9 hr drive (590 mi)" },
+      { name:PRIVATE.home, priv:"home", mode:"driving" }
+    ]}
+  ];
+
+  // ---------- storage ----------
+  function load(k, d){ try{ var v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } }
+  function save(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+  var DONE_KEY="dcnyc-done-v1", ADDR_KEY="dcnyc-addresses-v1";
+  var done = load(DONE_KEY, {}), addrs = load(ADDR_KEY, {});
+
+  // ---------- helpers ----------
+  var fTime = new Intl.DateTimeFormat("en-US",{timeZone:TZ,hour:"numeric",minute:"2-digit"});
+  var fHour = new Intl.DateTimeFormat("en-US",{timeZone:TZ,hour:"numeric"});
+  var fDate = new Intl.DateTimeFormat("en-US",{timeZone:TZ,weekday:"short",month:"short",day:"numeric"});
+  var fKey  = new Intl.DateTimeFormat("en-CA",{timeZone:TZ,year:"numeric",month:"2-digit",day:"2-digit"});
+  function query(s){ return s.priv ? addrs[s.priv] : s.q; }
+  function gmaps(s){ return "https://www.google.com/maps/dir/?api=1&destination=" + encodeURIComponent(query(s)) + "&travelmode=" + (s.mode||"transit"); }
+  function waze(s){ return "https://waze.com/ul?q=" + encodeURIComponent(query(s)) + "&navigate=yes"; }
+  function el(tag, cls, text){ var e=document.createElement(tag); if(cls) e.className=cls; if(text!=null) e.textContent=text; return e; }
+  function link(cls, href, text){ var a=el("a",cls,text); a.href=href; a.target="_blank"; a.rel="noopener"; return a; }
+  function setAddr(key){
+    var v = window.prompt("Address for " + PRIVATE[key] + " (saved only on this device):", addrs[key] || "");
+    if(v === null) return;
+    v = v.trim(); if(v) addrs[key] = v; else delete addrs[key];
+    save(ADDR_KEY, addrs); renderDay(); renderBoard();
+  }
+  function navButtons(s, cls1, cls2, box){
+    if(s.priv && !addrs[s.priv]){
+      var b = el("button", cls1, "Add address"); b.type="button";
+      b.addEventListener("click", function(){ setAddr(s.priv); });
+      box.appendChild(b); return;
+    }
+    box.appendChild(link(cls1, gmaps(s), "Google Maps"));
+    box.appendChild(link(cls2, waze(s), "Waze"));
+  }
+
+  DAYS.forEach(function(d){ d.stops.forEach(function(s,i){ s.id = d.key + "-" + i; }); });
+  var ALL = []; DAYS.forEach(function(d){ ALL = ALL.concat(d.stops); });
+
+  // ---------- day tabs + stops ----------
+  var todayKey = fKey.format(new Date());
+  var selected = DAYS.some(function(d){return d.key===todayKey;}) ? todayKey : DAYS[0].key;
+  var daysNav = document.getElementById("days");
+  function renderTabs(){
+    daysNav.textContent="";
+    DAYS.forEach(function(d){
+      var b=el("button","day"); b.type="button"; b.setAttribute("aria-pressed", String(d.key===selected));
+      b.appendChild(el("span","dw",d.dw)); b.appendChild(el("span","dn",d.dn));
+      if(d.key===todayKey) b.appendChild(el("span","today","Today"));
+      b.addEventListener("click",function(){ selected=d.key; renderTabs(); renderDay(); });
+      daysNav.appendChild(b);
+    });
+  }
+  function renderDay(){
+    var d = DAYS.filter(function(x){return x.key===selected;})[0];
+    document.getElementById("dayTitle").textContent = d.dw + ", Nov " + d.dn + ": " + d.title;
+    document.getElementById("dayNote").textContent = d.note || "";
+    var ol = document.getElementById("stops"); ol.textContent="";
+    d.stops.forEach(function(s, i){
+      var li = el("li","stop" + (done[s.id] ? " done" : ""));
+      var dot = el("button","dot", done[s.id] ? "✓" : String(i+1)); dot.type="button";
+      dot.setAttribute("aria-label", (done[s.id] ? "Mark not done: " : "Mark done: ") + s.name);
+      dot.addEventListener("click",function(){ if(done[s.id]) delete done[s.id]; else done[s.id]=true; save(DONE_KEY, done); renderDay(); renderBoard(); });
+      li.appendChild(dot);
+      var c = el("div","card"), r = el("div","row1");
+      r.appendChild(el("h3","name",s.name));
+      if(s.atLabel) r.appendChild(el("span","chip",s.atLabel));
+      if(s.leave) r.appendChild(el("span","chip leave","Leave " + fTime.format(s.leave)));
+      if(s.optional) r.appendChild(el("span","chip opt","Optional"));
+      c.appendChild(r);
+      if(s.note) c.appendChild(el("p","note",s.note));
+      if(s.look){ var lk = el("p","look"); lk.appendChild(el("b",null,"Look for: ")); lk.appendChild(document.createTextNode(s.look)); c.appendChild(lk); }
+      var L = el("div","links");
+      if(!s.arrival) navButtons(s, "btn small", "btn small", L);
+      if(s.priv && addrs[s.priv]){ var ed = el("button","addr","Edit address"); ed.type="button"; ed.addEventListener("click",function(){ setAddr(s.priv); }); L.appendChild(ed); }
+      c.appendChild(L);
+      if(s.leg) c.appendChild(el("p","leg","Next: " + s.leg));
+      li.appendChild(c); ol.appendChild(li);
+    });
+  }
+
+  // ---------- departure board ----------
+  function plural(n,w){ return n + " " + w + (n===1?"":"s"); }
+  function span(ms){
+    var m = Math.round(ms/60000);
+    if(m < 60) return plural(m,"min");
+    var h = Math.floor(m/60), mm = m%60;
+    if(h < 24) return h + " hr" + (mm ? " " + mm + " min" : "");
+    return plural(Math.round(ms/86400000),"day");
+  }
+  function renderBoard(){
+    var now = new Date();
+    var next = ALL.filter(function(s){ return s.at && !done[s.id] && s.at > now; })[0];
+    var board = document.getElementById("board");
+    var st=document.getElementById("bState"), big=document.getElementById("bBig"),
+        what=document.getElementById("bWhat"), sub=document.getElementById("bSub"),
+        act=document.getElementById("bActions");
+    board.className = "board cond"; act.textContent="";
+    if(!next){ st.textContent="Trip complete"; big.textContent="Welcome home"; what.textContent=""; sub.textContent=""; return; }
+    what.textContent = next.name;
+    if(next.leave){
+      var diff = next.leave - now;
+      if(diff <= 0){ board.classList.add("now"); st.textContent="Time to go"; big.textContent="Leave now"; }
+      else if(diff <= 30*60000){ board.classList.add("soon"); st.textContent="Leaving soon"; big.textContent="Leave in " + span(diff); }
+      else if(diff < 24*3600000){ st.textContent="Up next"; big.textContent="Leave in " + span(diff); }
+      else { st.textContent="Next timed stop"; big.textContent="In " + span(next.at - now); }
+      sub.textContent = (next.atLabel ? next.atLabel + ", " : "") + fDate.format(next.at) + ". Leave " + (next.leaveFrom ? next.leaveFrom + " " : "") + "by " + fTime.format(next.leave) + ".";
+    } else {
+      st.textContent = next.arrival ? "Arriving" : "Up next";
+      big.textContent = (next.arrival ? "Arrives in " : "In ") + span(next.at - now);
+      sub.textContent = fDate.format(next.at) + " at " + fTime.format(next.at) + ".";
+    }
+    if(!next.arrival) navButtons(next, "btn", "btn ghost", act);
+  }
+
+  // ---------- live weather (National Weather Service) ----------
+  var LOCS = { nyc:{ name:"Lower Manhattan", lat:40.7075, lon:-74.0113 }, dc:{ name:"Rockville + DC", lat:39.0617, lon:-77.1208 } };
+  function autoLoc(){ var k = fKey.format(new Date()); return (k==="2026-11-27" || k==="2026-11-28") ? "nyc" : "dc"; }
+  var wxLoc = autoLoc(), wxPinned = false, pointCache = {};
+  var segBtns = document.querySelectorAll(".seg button");
+  function paintSeg(){ for(var i=0;i<segBtns.length;i++) segBtns[i].setAttribute("aria-pressed", String(segBtns[i].getAttribute("data-loc")===wxLoc)); }
+  for(var i=0;i<segBtns.length;i++){ segBtns[i].addEventListener("click", function(){ wxLoc=this.getAttribute("data-loc"); wxPinned=true; paintSeg(); loadWeather(); }); }
+
+  function getJSON(url){
+    return fetch(url, { headers:{ "Accept":"application/geo+json, application/json" } }).then(function(r){
+      if(!r.ok) throw new Error("HTTP " + r.status); return r.json();
+    });
+  }
+  function getPoint(key){
+    if(pointCache[key]) return Promise.resolve(pointCache[key]);
+    var L = LOCS[key];
+    return getJSON("https://api.weather.gov/points/" + L.lat + "," + L.lon).then(function(j){ pointCache[key]=j.properties; return j.properties; });
+  }
+  function wxFail(){
+    var box = document.getElementById("wx"); box.textContent="";
+    box.appendChild(el("p","muted","The forecast didn’t load. Check your connection, or open it directly:"));
+    var L = LOCS[wxLoc];
+    box.appendChild(link("btn small","https://forecast.weather.gov/MapClick.php?lat=" + L.lat + "&lon=" + L.lon + "&FcstType=graphical","Hourly forecast"));
+  }
+  function loadWeather(){
+    var key = wxLoc;
+    getPoint(key).then(function(p){
+      return Promise.all([ getJSON(p.forecastHourly), getJSON(p.forecast) ]);
+    }).then(function(res){
+      if(key !== wxLoc) return;
+      renderWeather(res[0].properties.periods || [], res[1].properties.periods || []);
+    }).catch(wxFail);
+  }
+  function renderWeather(hourly, daily){
+    var box = document.getElementById("wx"); box.textContent="";
+    var now = new Date();
+    var hrs = hourly.filter(function(h){ return new Date(h.endTime) > now; });
+    if(!hrs.length){ wxFail(); return; }
+    var cur = hrs[0];
+    var n = el("div","wxnow");
+    n.appendChild(el("span","temp cond", cur.temperature + "°"));
+    n.appendChild(el("span","cond-txt", cur.shortForecast + (cur.windSpeed ? ", wind " + cur.windSpeed : "")));
+    box.appendChild(n);
+    var pop = cur.probabilityOfPrecipitation && cur.probabilityOfPrecipitation.value;
+    if(pop) box.appendChild(el("p","muted", pop + "% chance of rain or snow this hour."));
+
+    var next12 = hrs.slice(0, 13), low = next12[0];
+    next12.forEach(function(h){ if(h.temperature < low.temperature) low = h; });
+    var drop = cur.temperature - low.temperature;
+    var msg = drop >= 5
+      ? "Drops " + drop + "° to " + low.temperature + "° by " + fTime.format(new Date(low.startTime)) + ". Bring a layer."
+      : "Steady temperatures for the next 12 hours.";
+    box.appendChild(el("p","drop " + (drop >= 5 ? "warn" : "calm"), msg));
+
+    var strip = el("div","hours");
+    for(var i=1;i<next12.length;i+=2){
+      var h = next12[i], c = el("div","hour");
+      c.appendChild(el("div","h", fHour.format(new Date(h.startTime))));
+      c.appendChild(el("div","v cond", h.temperature + "°"));
+      strip.appendChild(c);
+    }
+    box.appendChild(strip);
+
+    var trip = daily.filter(function(p){ var k = fKey.format(new Date(p.startTime)); return k >= "2026-11-24" && k <= "2026-11-29"; });
+    if(trip.length){
+      var ul = el("ul","outlook");
+      trip.forEach(function(p){
+        var li = el("li"); li.appendChild(el("span", null, p.name)); li.appendChild(el("span","muted", (p.isDaytime ? "High " : "Low ") + p.temperature + "°, " + p.shortForecast)); ul.appendChild(li);
+      });
+      box.appendChild(el("p","tip","Trip outlook for " + LOCS[wxLoc].name + ":"));
+      box.appendChild(ul);
+    } else if(fKey.format(now) < "2026-11-24"){
+      box.appendChild(el("p","tip","Trip-day forecasts appear about a week before you leave."));
+    }
+    box.appendChild(el("p","tip","Updated " + fTime.format(now) + ". Source: National Weather Service."));
+  }
+
+  // ---------- live Amtrak status (Amtraker, unofficial) ----------
+  var TRAINS = { "66":{ from:"WAS", to:"NYP", date:"2026-11-26", show:["2026-11-26","2026-11-27"] },
+                 "65":{ from:"NYP", to:"WAS", date:"2026-11-28", show:["2026-11-28","2026-11-29"] } };
+  function mins(a,b){ return Math.round((new Date(a) - new Date(b))/60000); }
+  function lateText(m){ return m > 2 ? m + " min late" : (m < -2 ? (-m) + " min early" : "on time"); }
+  function loadTrain(num){
+    var cfg = TRAINS[num], out = document.getElementById("st" + num);
+    if(cfg.show.indexOf(fKey.format(new Date())) < 0) return;
+    fetch("https://api-v3.amtraker.com/v3/trains/" + num).then(function(r){ if(!r.ok) throw 0; return r.json(); }).then(function(j){
+      var list = (j && j[num]) || [], trip = null, a = null, b = null;
+      list.forEach(function(tr){
+        (tr.stations||[]).forEach(function(s){ if(s.code===cfg.from && s.schDep && fKey.format(new Date(s.schDep))===cfg.date){ trip = tr; } });
+      });
+      if(!trip){ out.className="status wait"; out.textContent="Not tracking yet. Check back closer to departure."; return; }
+      trip.stations.forEach(function(s){ if(s.code===cfg.from) a=s; if(s.code===cfg.to) b=s; });
+      var parts = [];
+      if(a && a.dep && a.schDep){ var md = mins(a.dep, a.schDep); parts.push((new Date(a.dep) <= new Date() ? "Departed " : "Departing ") + fTime.format(new Date(a.dep)) + " (" + lateText(md) + ")"); }
+      if(b && b.arr && b.schArr){ var ma = mins(b.arr, b.schArr); parts.push("arriving " + fTime.format(new Date(b.arr)) + " (" + lateText(ma) + ")"); var late = ma > 2; }
+      if(!parts.length){ out.className="status wait"; out.textContent="Tracking, no time estimates yet."; return; }
+      out.className = "status " + (late ? "late" : "ok");
+      out.textContent = parts.join(", ") + ".";
+    }).catch(function(){ out.className="status wait"; out.textContent="Live status didn’t load. Use the Amtrak button."; });
+  }
+
+  // ---------- live NYC subway alerts (MTA) ----------
+  var LINE_COLORS = { "1":"#EE352E","2":"#EE352E","3":"#EE352E","4":"#00933C","5":"#00933C","6":"#00933C","6X":"#00933C","7":"#B933AD","7X":"#B933AD",
+    "A":"#0039A6","C":"#0039A6","E":"#0039A6","B":"#FF6319","D":"#FF6319","F":"#FF6319","FX":"#FF6319","M":"#FF6319","G":"#6CBE45",
+    "J":"#996633","Z":"#996633","L":"#A7A9AC","N":"#FCCC0A","Q":"#FCCC0A","R":"#FCCC0A","W":"#FCCC0A","S":"#808183","GS":"#808183","FS":"#808183","H":"#808183","SI":"#0039A6" };
+  function tr(x){ var ts = x && x.translation; if(!ts || !ts.length) return ""; for(var i=0;i<ts.length;i++){ if(ts[i].language==="en") return ts[i].text; } return (ts[0].text||"").replace(/<[^>]+>/g,""); }
+  var showAllAlerts = false;
+  function loadSubway(){
+    fetch("https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/camsys%2Fsubway-alerts.json").then(function(r){ if(!r.ok) throw 0; return r.json(); }).then(function(j){
+      var nowS = Date.now()/1000, items = [];
+      (j.entity||[]).forEach(function(e){
+        var a = e.alert; if(!a) return;
+        var periods = a.active_period || a.activePeriod || [];
+        var active = !periods.length || periods.some(function(p){ var s=+(p.start||0), en=+(p.end||0); return s <= nowS && (!en || en >= nowS); });
+        if(!active) return;
+        var routes = [];
+        (a.informed_entity || a.informedEntity || []).forEach(function(ie){ var r = ie.route_id || ie.routeId; if(r && routes.indexOf(r) < 0) routes.push(r); });
+        if(!routes.length) return;
+        var meta = a["transit_realtime.mercury_alert"] || a.mercuryAlert || {};
+        var type = meta.alert_type || meta.alertType || "Service change";
+        items.push({ routes:routes, type:type, text:tr(a.header_text || a.headerText) });
+      });
+      var rank = function(t){ t=t.toLowerCase(); return t.indexOf("delay")>=0 ? 0 : (t.indexOf("suspend")>=0 || t.indexOf("no ")===0 ? 1 : 2); };
+      items.sort(function(x,y){ return rank(x.type) - rank(y.type); });
+      renderSubway(items);
+    }).catch(function(){
+      var box = document.getElementById("subway"); box.textContent="";
+      box.appendChild(el("p","muted","Live subway alerts didn’t load in this browser. Use the MTA button below."));
+    });
+  }
+  function renderSubway(items){
+    var box = document.getElementById("subway"); box.textContent="";
+    if(!items.length){ box.appendChild(el("p","status ok","Good service. No active subway alerts.")); return; }
+    var ul = el("ul","alerts"), list = showAllAlerts ? items : items.slice(0,6);
+    list.forEach(function(it){
+      var li = el("li"), bl = el("span","bullets");
+      it.routes.slice(0,4).forEach(function(r){ var b = el("span","bullet", r.replace(/X$/,"")); b.style.background = LINE_COLORS[r] || "#52667A"; if(LINE_COLORS[r]==="#FCCC0A") b.style.color="#111"; bl.appendChild(b); });
+      li.appendChild(bl);
+      var tx = el("span"); tx.appendChild(el("span","atype",it.type)); tx.appendChild(document.createTextNode(it.text.length > 180 ? it.text.slice(0,177) + "…" : it.text));
+      li.appendChild(tx); ul.appendChild(li);
+    });
+    box.appendChild(ul);
+    if(items.length > 6){
+      var b = el("button","btn small", showAllAlerts ? "Show fewer" : "Show all " + items.length + " alerts"); b.type="button";
+      b.addEventListener("click", function(){ showAllAlerts = !showAllAlerts; renderSubway(items); });
+      box.appendChild(b);
+    }
+    box.appendChild(el("p","tip","Updated " + fTime.format(new Date()) + ". Source: MTA."));
+  }
+
+  // ---------- keep screen on (tablet) ----------
+  var wakeBtn = document.getElementById("wakeBtn"), lock = null, wantWake = false;
+  if("wakeLock" in navigator){
+    wakeBtn.hidden = false;
+    var getLock = function(){ return navigator.wakeLock.request("screen").then(function(l){ lock=l; wakeBtn.textContent="Screen stays on"; l.addEventListener("release",function(){ lock=null; if(!wantWake) wakeBtn.textContent="Keep screen on"; }); }).catch(function(){ wakeBtn.textContent="Screen lock unavailable"; }); };
+    wakeBtn.addEventListener("click", function(){ if(lock){ wantWake=false; lock.release(); } else { wantWake=true; getLock(); } });
+    document.addEventListener("visibilitychange", function(){ if(wantWake && !lock && document.visibilityState==="visible") getLock(); });
+  }
+
+  // ---------- clock + refresh ----------
+  function tick(){
+    var now = new Date();
+    document.getElementById("clockT").textContent = fTime.format(now);
+    document.getElementById("clockD").textContent = fDate.format(now) + ", Eastern";
+    var k = fKey.format(now);
+    if(k !== todayKey){
+      todayKey = k;
+      if(DAYS.some(function(d){return d.key===k;})) selected = k;
+      if(!wxPinned){ wxLoc = autoLoc(); paintSeg(); loadWeather(); }
+      renderTabs(); renderDay();
+    }
+    renderBoard();
+  }
+  function refreshLive(){ loadWeather(); loadSubway(); loadTrain("66"); loadTrain("65"); }
+
+  document.getElementById("resetDone").addEventListener("click",function(){ done={}; save(DONE_KEY, done); renderDay(); renderBoard(); });
+  paintSeg(); renderTabs(); renderDay(); tick(); refreshLive();
+  setInterval(tick, 30000);
+  setInterval(refreshLive, 10*60000);
+})();
+</script>
+</body>
+</html>
